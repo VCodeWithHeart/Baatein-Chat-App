@@ -213,8 +213,6 @@ const useChatStore = create((set, get) => {
             })
             .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
-          console.log("updatedChats", updatedChats);
-
           return {
             messages: updatedMessages,
             chats: updatedChats,
@@ -222,12 +220,25 @@ const useChatStore = create((set, get) => {
         });
       });
 
-      socket.on("message-deleted", (deletedMessageId) => {
-        set((state) => ({
-          messages: state.messages.filter(
-            (msg) => msg._id !== deletedMessageId
-          ),
-        }));
+      socket.on("message-deleted", (data) => {
+        set((state) => {
+          const messages = state.messages.filter(
+            (msg) => msg._id !== data?.messageId
+          );
+
+          const updatedChats = state.chats.map((chat) => {
+            if (chat.id === data?.roomId) {
+              return {
+                ...chat,
+                lastMessage: messages?.[messages.length - 1],
+                updatedAt: new Date(),
+              };
+            }
+            return chat;
+          });
+
+          return { messages, chats: updatedChats };
+        });
       });
 
       socket.on("message-updated", ({ messageId, newContent }) => {

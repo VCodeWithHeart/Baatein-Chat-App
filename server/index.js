@@ -44,17 +44,13 @@ io.on("connection", (socket) => {
   // for editing messages
 
   socket.on("edit-message", (data) => {
-    // data = { roomId, messageId, newContent }
     console.log("Message Edited:", data.messageId);
-    // Broadcast to everyone in the room (including sender to confirm update)
     io.to(data.roomId).emit("message-updated", data);
   });
 
   // for delete messages
   socket.on("delete-message", (data) => {
-    const { messageId, roomId } = data;
-    // Broadcast to everyone in the room (including sender)
-    io.to(roomId).emit("message-deleted", messageId);
+    io.to(data.roomId).emit("message-deleted", data);
   });
 
   // for new received message
