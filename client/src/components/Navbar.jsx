@@ -69,10 +69,10 @@ export const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="cursor-pointer"
+              className="cursor-pointer md:hidden"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              <Menu className="h-5 w-5 text-gray-500 md:hidden" />
+              <Menu className="h-5 w-5 text-gray-500" />
             </Button>
             <div className="flex items-center space-x-2">
               <div className="bg-primary/10 p-2 rounded-lg">
