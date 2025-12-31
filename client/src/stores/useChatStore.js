@@ -68,7 +68,6 @@ const useChatStore = create((set, get) => {
 
     editMessageHandler: async (messageId, newContent) => {
       const { socket, activeChatUser } = get();
-      console.log("newContent", newContent);
       try {
         // Call API
         const response = await editMessage(newContent, messageId);
@@ -214,6 +213,8 @@ const useChatStore = create((set, get) => {
             })
             .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
+          console.log("updatedChats", updatedChats);
+
           return {
             messages: updatedMessages,
             chats: updatedChats,
@@ -230,13 +231,31 @@ const useChatStore = create((set, get) => {
       });
 
       socket.on("message-updated", ({ messageId, newContent }) => {
-        set((state) => ({
-          messages: state.messages.map((msg) =>
+        set((state) => {
+          const updatedMessages = state.messages.map((msg) =>
             msg._id === messageId
               ? { ...msg, content: newContent?.content, isEdited: true }
               : msg
-          ),
-        }));
+          );
+
+          const updatedChats = state.chats
+            .map((chat) => {
+              if (chat.id === newContent.room) {
+                return {
+                  ...chat,
+                  lastMessage: newContent,
+                  updatedAt: newContent?.updatedAt,
+                };
+              }
+              return chat;
+            })
+            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+          return {
+            messages: updatedMessages,
+            chats: updatedChats,
+          };
+        });
       });
 
       socket.on("user-typing", (user) => {
