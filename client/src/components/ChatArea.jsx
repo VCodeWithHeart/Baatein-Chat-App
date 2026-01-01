@@ -241,8 +241,6 @@ const ChatArea = () => {
         </div>
       )}
 
-      {/* Messages Area - UPDATED DESIGN */}
-
       {/* Messages Area - FIXED DESIGN */}
       <div className="flex-1 overflow-y-auto p-4 bg-amber-50/60 custom-scrollbar">
         {loadingMessages ? (
@@ -532,7 +530,7 @@ const ChatArea = () => {
 
             <Button
               size="icon"
-              className="bg-black text-white rounded-full w-11 h-11 cursor-pointer"
+              className="bg-black/80 text-white rounded-full w-11 h-11 cursor-pointer hover:bg-black"
               onClick={handleSend}
             >
               <SendHorizontal className="h-5 w-5" />
