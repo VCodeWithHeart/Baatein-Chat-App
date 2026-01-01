@@ -168,10 +168,12 @@ const ChatArea = () => {
                 <div className="flex items-center mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                   <span
                     className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                      isAnonymous ? "bg-purple-500" : "bg-green-500"
+                      window?.navigator?.onLine
+                        ? "bg-green-500"
+                        : "bg-neutral-500"
                     }`}
                   ></span>
-                  {isAnonymous ? "Anonymous" : "Online"}
+                  {window?.navigator?.onLine ? "Online" : "Offline"}
                 </div>
               </div>
             </div>
