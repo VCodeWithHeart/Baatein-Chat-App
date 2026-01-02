@@ -223,12 +223,7 @@ const GroupCreationModal = () => {
                       >
                         <Avatar className="h-10 w-10">
                           <AvatarImage
-                            src={
-                              user.avatar ||
-                              `/avatars/${
-                                Math.floor(Math.random() * 5) + 1
-                              }.png`
-                            }
+                            src={user.avatar || `/avatars/${user._id}.png`}
                             alt={user.username}
                           />
                           <AvatarFallback className="bg-indigo-100 text-indigo-600 font-bold">
