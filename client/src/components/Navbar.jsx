@@ -46,13 +46,13 @@ export const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="cursor-pointer md:hidden"
+              className="cursor-pointer md:hidden gap-2! justify-start mr-0!"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu className="h-5 w-5 text-gray-500" />
             </Button>
             <div className="flex items-center space-x-2">
-              <div className="bg-primary/10 p-2 rounded-lg">
+              <div className="bg-primary/10 rounded-lg">
                 <MessageCircle className="h-5 w-5 text-primary" />
               </div>
               <span className="text-lg font-semibold text-gray-800">
@@ -78,9 +78,7 @@ export const Navbar = () => {
                   : "border-purple-400 text-purple-500 hover:text-purple-600"
               } transition-all duration-200`}
             >
-              <span className="text-sm font-medium">
-                {isAnonymous ? "Anonymous Chat Mode" : "Anonymous Chat Mode"}
-              </span>
+              <span className="text-sm font-medium">Anonymous Mode</span>
               {isAnonymous && (
                 <span className="ml-1 h-2 w-2 rounded-full bg-white" />
               )}

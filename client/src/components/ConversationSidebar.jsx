@@ -41,7 +41,7 @@ const ConversationSidebar = () => {
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto max-h-[550px] md:max-h-none">
+      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-242px)] md:max-h-none">
         {isChatsLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
@@ -109,13 +109,13 @@ const ConversationSidebar = () => {
                         <TooltipTrigger asChild>
                           <span
                             className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white
-                ${
-                  onlineStatus === "green"
-                    ? "bg-green-500"
-                    : onlineStatus === "blue"
-                    ? "bg-blue-500"
-                    : "bg-gray-500"
-                }`}
+                           ${
+                             onlineStatus === "green"
+                               ? "bg-green-500"
+                               : onlineStatus === "blue"
+                               ? "bg-blue-500"
+                               : "bg-gray-500"
+                           }`}
                           ></span>
                         </TooltipTrigger>
                         <TooltipContent
