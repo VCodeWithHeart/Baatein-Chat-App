@@ -48,6 +48,7 @@ const getChats = async (req, res, next) => {
         name: chatName,
         type: room.type,
         isGroup: isGroup,
+        members: room.members,
         avatarUrl: chatAvatar,
         lastMessage: room.lastMessage,
         updatedAt: room.updatedAt,

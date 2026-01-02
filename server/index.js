@@ -21,6 +21,22 @@ const io = new Server(server, {
   },
 });
 
+let onlineUsers = []; // Yahan hum sab online users ko store karenge
+
+const addUser = (userData, socketId) => {
+  // Check karte hain user pehle se list mein toh nahi
+  !onlineUsers.some((user) => user.userId === userData.userId) &&
+    onlineUsers.push({
+      userId: userData.userId,
+      socketId,
+      username: userData?.username,
+    });
+};
+
+const removeUser = (socketId) => {
+  onlineUsers = onlineUsers.filter((user) => user.socketId !== socketId);
+};
+
 io.on("connection", (socket) => {
   console.log("a user connected", socket.id);
 
@@ -29,8 +45,22 @@ io.on("connection", (socket) => {
     console.log("User Joined Room with ID :-", roomId);
   });
 
-  // typing events
+  // 1. User App mein aaya (Frontend se 'addUser' event aayega)
+  socket.on("addUser", (userId) => {
+    // to remove the user if he is already online (in case of two users with same socket id)
+    removeUser(socket.id);
 
+    addUser(userId, socket.id);
+
+    // const uniqueOnlineUsers = [
+    //   ...new Map(onlineUsers.map((user) => [user.socketId, user])).values(),
+    // ];
+
+    // Sabhi logon ko updated list bhej do
+    io.emit("getUsers", onlineUsers);
+  });
+
+  // typing events
   socket.on("typing", (user) => {
     console.log(user, "is Typing...");
     socket.broadcast.emit("user-typing", user);
@@ -42,7 +72,6 @@ io.on("connection", (socket) => {
   });
 
   // for editing messages
-
   socket.on("edit-message", (data) => {
     console.log("Message Edited:", data.messageId);
     io.to(data.roomId).emit("message-updated", data);
@@ -56,6 +85,13 @@ io.on("connection", (socket) => {
   // for new received message
   socket.on("newMessage", (data) => {
     io.to(data.roomId).emit("message received", data);
+  });
+
+  // 2. User chala gaya (Browser band kiya ya net gaya)
+  socket.on("disconnect", () => {
+    removeUser(socket.id);
+    // Sabko bata do ki list change ho gayi hai
+    io.emit("getUsers", onlineUsers);
   });
 });
 

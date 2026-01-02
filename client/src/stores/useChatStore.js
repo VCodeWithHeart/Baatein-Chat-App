@@ -23,6 +23,7 @@ const useChatStore = create((set, get) => {
     isTyping: false,
     typingUsers: [],
     message: "",
+    onlineUsers: [],
     socket,
 
     // Loading states
@@ -174,11 +175,20 @@ const useChatStore = create((set, get) => {
       }
     },
 
-    connectSocket: () => {
+    connectSocket: (userData) => {
       const { socket } = get();
+      console.log("userId", userData.userId);
       if (!socket.connected) {
         socket.connect();
       }
+
+      socket.on("connect", () => {
+        console.log("Connected with ID:", socket.id);
+
+        if (userData?.userId) {
+          socket.emit("addUser", userData);
+        }
+      });
     },
 
     disconnectSocket: () => {
@@ -191,6 +201,10 @@ const useChatStore = create((set, get) => {
     // WebSocket event handlers
     setupSocketListeners: () => {
       const { socket } = get();
+
+      socket.on("getUsers", (users) => {
+        set({ onlineUsers: users });
+      });
 
       socket.on("message received", (newMessage) => {
         set((state) => {
@@ -295,6 +309,7 @@ const useChatStore = create((set, get) => {
       socket.off("message-updated");
       socket.off("user-typing");
       socket.off("user-stop-typing");
+      socket.off("getUsers");
     },
 
     // Initialize chats

@@ -37,8 +37,7 @@ const ChatArea = () => {
       {/* Chat Header */}
       {activeChatUser?.id && <ChatHeader />}
 
-      {/* Messages Area - FIXED DESIGN */}
-
+      {/* Messages Area */}
       <MessagesList messagesEndRef={messagesEndRef} />
 
       {/* Message Input Area */}

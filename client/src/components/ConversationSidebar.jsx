@@ -5,11 +5,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUIStore from "@/stores/useUIStore";
 import useChatStore from "@/stores/useChatStore";
 import { cn } from "@/lib/utils";
+import { getOnlineStatus } from "@/utils/userUtils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const ConversationSidebar = () => {
   const { setShowGroupModal, sidebarOpen } = useUIStore();
   const {
     chats,
+    onlineUsers,
     isChatsLoading,
     isChatLoadingError,
     activeChatUser,
@@ -38,7 +41,7 @@ const ConversationSidebar = () => {
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto max-h-[550px] md:max-h-none">
         {isChatsLoading ? (
           <div className="flex flex-col items-center justify-center h-full">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
@@ -77,47 +80,87 @@ const ConversationSidebar = () => {
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {chats?.map((chatObj, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "cursor-pointer transition-colors duration-200",
-                  activeChatUser?.id === chatObj?.id
-                    ? "bg-gray-50 border-l-4 border-primary"
-                    : "hover:bg-gray-50"
-                )}
-                onClick={() => handleInitializeChat(chatObj)}
-              >
-                <div className="p-4 flex items-center gap-4">
-                  <div className="relative shrink-0">
-                    <Avatar className="w-12 h-12 border border-gray-200">
-                      <AvatarImage src={chatObj?.avatar} alt={chatObj?.name} />
-                      <AvatarFallback className="font-medium bg-gray-100 text-gray-700">
-                        {chatObj?.name?.[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    {chatObj?.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white"></span>
-                    )}
-                  </div>
+            {chats?.map((chatObj, i) => {
+              const onlineStatus = getOnlineStatus(chatObj, onlineUsers);
 
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h3 className="font-medium text-gray-800 truncate">
-                        {chatObj?.name}
-                      </h3>
-                      <span className="text-xs text-gray-500 shrink-0 ml-2">
-                        {i === 0 ? "2m ago" : `${i * 5}m ago`}
-                      </span>
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    "cursor-pointer transition-colors duration-200",
+                    activeChatUser?.id === chatObj?.id
+                      ? "bg-gray-50 border-l-4 border-primary"
+                      : "hover:bg-gray-50"
+                  )}
+                  onClick={() => handleInitializeChat(chatObj)}
+                >
+                  <div className="p-4 flex items-center gap-4">
+                    <div className="relative shrink-0">
+                      <Avatar className="w-12 h-12 border border-gray-200">
+                        <AvatarImage
+                          src={chatObj?.avatar}
+                          alt={chatObj?.name}
+                        />
+                        <AvatarFallback className="font-medium bg-gray-100 text-gray-700">
+                          {chatObj?.name?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white
+                ${
+                  onlineStatus === "green"
+                    ? "bg-green-500"
+                    : onlineStatus === "blue"
+                    ? "bg-blue-500"
+                    : "bg-gray-500"
+                }`}
+                          ></span>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          className="[&_svg]:hidden!"
+                          align="right"
+                          sideOffset={4}
+                          side="right"
+                        >
+                          <p
+                            className={`text-xs text-black ${
+                              onlineStatus === "green"
+                                ? "bg-green-100"
+                                : onlineStatus === "blue"
+                                ? "bg-blue-100"
+                                : "bg-gray-100"
+                            } px-2 py-1 rounded-full`}
+                          >
+                            {onlineStatus === "green"
+                              ? "Online"
+                              : onlineStatus === "blue"
+                              ? "Someone is online"
+                              : "Offline"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
 
-                    <p className="text-sm text-gray-500 truncate">
-                      {chatObj?.lastMessage?.content || "No messages yet"}
-                    </p>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <h3 className="font-medium text-gray-800 truncate">
+                          {chatObj?.name}
+                        </h3>
+                        <span className="text-xs text-gray-500 shrink-0 ml-2">
+                          {i === 0 ? "2m ago" : `${i * 5}m ago`}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-gray-500 truncate">
+                        {chatObj?.lastMessage?.content || "No messages yet"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

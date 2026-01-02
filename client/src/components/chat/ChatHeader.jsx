@@ -4,10 +4,20 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Info, MessageCircle, MoreVerticalIcon, User, Users, Video } from "lucide-react";
+import {
+  Info,
+  MessageCircle,
+  MoreVerticalIcon,
+  User,
+  Users,
+  Video,
+} from "lucide-react";
+import { getOnlineStatus } from "@/utils/userUtils";
 
 const ChatHeader = () => {
-  const { activeChatUser } = useChatStore();
+  const { activeChatUser, onlineUsers } = useChatStore();
+  const onlineStatus = getOnlineStatus(activeChatUser, onlineUsers);
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 p-3 bg-white backdrop-blur-sm">
       <div className="flex items-center justify-between">
@@ -42,10 +52,18 @@ const ChatHeader = () => {
             <div className="flex items-center mt-0.5 text-xs text-gray-500 dark:text-gray-400">
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                  window?.navigator?.onLine ? "bg-green-500" : "bg-neutral-500"
+                  onlineStatus === "green"
+                    ? "bg-green-500"
+                    : onlineStatus === "blue"
+                    ? "bg-blue-500"
+                    : "bg-gray-500"
                 }`}
               ></span>
-              {window?.navigator?.onLine ? "Online" : "Offline"}
+              {onlineStatus === "green"
+                ? "Online"
+                : onlineStatus === "blue"
+                ? "Someone is Online"
+                : "Offline"}
             </div>
           </div>
         </div>
