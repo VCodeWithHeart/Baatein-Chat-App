@@ -9,7 +9,7 @@ import { getOnlineStatus } from "@/utils/userUtils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const ConversationSidebar = () => {
-  const { setShowGroupModal, sidebarOpen } = useUIStore();
+  const { setShowGroupModal, sidebarOpen, setSidebarOpen } = useUIStore();
   const {
     chats,
     onlineUsers,
@@ -21,6 +21,8 @@ const ConversationSidebar = () => {
   } = useChatStore();
 
   const handleInitializeChat = (chatObj) => {
+    setSidebarOpen(false);
+
     if (chatObj?.id === activeChatUser?.id) return;
     setActiveChatUser(chatObj);
     getMessagesForUser(chatObj);
