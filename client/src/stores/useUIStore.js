@@ -6,9 +6,6 @@ const useUIStore = create((set) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (value) => set({ sidebarOpen: value }),
 
-  isAnonymous: false,
-  setIsAnonymous: (value) => set({ isAnonymous: value }),
-
   showGroupModal: false,
   setShowGroupModal: (value) => set({ showGroupModal: value }),
   toggleGroupModal: () =>

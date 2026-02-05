@@ -8,7 +8,7 @@ const roomSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["direct", "group", "anonymous_group"],
+      enum: ["direct", "group"],
       default: "group",
     },
     members: [
@@ -28,14 +28,10 @@ const roomSchema = new mongoose.Schema(
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",
-      default: null
-    },
-    isAnonymousWorld: {
-      type: Boolean,
-      default: false,
+      default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Room", roomSchema);

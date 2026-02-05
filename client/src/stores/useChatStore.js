@@ -9,6 +9,8 @@ import {
   createGroupChat,
   deleteMessage,
   editMessage,
+  deleteChat,
+  editGroupName,
 } from "@/services/chatService";
 
 const useChatStore = create((set, get) => {
@@ -93,7 +95,7 @@ const useChatStore = create((set, get) => {
         const response = await deleteMessage(messageId);
         const data = response.data;
 
-        socket.emit("delete-message", {
+        get().socket.emit("delete-message", {
           messageId,
           roomId: get().activeChatUser.id,
         });
@@ -155,7 +157,7 @@ const useChatStore = create((set, get) => {
         const response = await createGroupChat(groupData);
         const data = response.data;
 
-        socket.emit("joinRoom", data.room._id);
+        get().socket.emit("joinRoom", data.room._id);
 
         set((state) => ({
           chats: [...state.chats, data.room],
@@ -171,6 +173,79 @@ const useChatStore = create((set, get) => {
         return data;
       } catch (error) {
         console.error("Failed to start chat:", error);
+        throw error;
+      }
+    },
+
+    deleteChatHandler: async (roomId) => {
+      try {
+        const response = await deleteChat(roomId);
+        const data = response.data;
+
+        const { socket, activeChatUser } = get();
+
+        // Emit socket event to notify other users
+        get().socket.emit("delete-chat", {
+          roomId,
+        });
+
+        // Update local state
+        set((state) => {
+          const updatedChats = state.chats.filter((chat) => chat.id !== roomId);
+
+          return {
+            chats: updatedChats,
+            // If the deleted chat was active, reset it
+            activeChatUser:
+              activeChatUser?.id === roomId ? null : activeChatUser,
+            messages: activeChatUser?.id === roomId ? [] : state.messages,
+          };
+        });
+
+        return data;
+      } catch (error) {
+        console.error("Failed to delete chat:", error);
+        throw error;
+      }
+    },
+
+    editGroupNameHandler: async (roomId, newName) => {
+      try {
+        const response = await editGroupName(roomId, newName);
+        const data = response.data;
+
+        // Emit socket event to notify other users
+        get().socket.emit("edit-group-name", {
+          roomId,
+          newName: data.room.name,
+        });
+
+        // Update local state
+        set((state) => {
+          const updatedChats = state.chats.map((chat) => {
+            if (chat.id === roomId) {
+              return {
+                ...chat,
+                name: data.room.name,
+              };
+            }
+            return chat;
+          });
+
+          const updatedActiveChatUser =
+            state.activeChatUser?.id === roomId
+              ? { ...state.activeChatUser, name: data.room.name }
+              : state.activeChatUser;
+
+          return {
+            chats: updatedChats,
+            activeChatUser: updatedActiveChatUser,
+          };
+        });
+
+        return data;
+      } catch (error) {
+        console.error("Failed to edit group name:", error);
         throw error;
       }
     },
@@ -237,7 +312,7 @@ const useChatStore = create((set, get) => {
       socket.on("message-deleted", (data) => {
         set((state) => {
           const messages = state.messages.filter(
-            (msg) => msg._id !== data?.messageId
+            (msg) => msg._id !== data?.messageId,
           );
 
           const updatedChats = state.chats.map((chat) => {
@@ -260,7 +335,7 @@ const useChatStore = create((set, get) => {
           const updatedMessages = state.messages.map((msg) =>
             msg._id === messageId
               ? { ...msg, content: newContent?.content, isEdited: true }
-              : msg
+              : msg,
           );
 
           const updatedChats = state.chats
@@ -295,10 +370,50 @@ const useChatStore = create((set, get) => {
       socket.on("user-stop-typing", (user) => {
         set((state) => ({
           typingUsers: state.typingUsers.filter(
-            (u) => u.userId !== user.userId
+            (u) => u.userId !== user.userId,
           ),
           isTyping: state.typingUsers.length > 1,
         }));
+      });
+
+      socket.on("chat-deleted", (data) => {
+        set((state) => {
+          const updatedChats = state.chats.filter(
+            (chat) => chat.id !== data?.roomId,
+          );
+
+          const isChatActive = state.activeChatUser?.id === data?.roomId;
+
+          return {
+            chats: updatedChats,
+            activeChatUser: isChatActive ? null : state.activeChatUser,
+            messages: isChatActive ? [] : state.messages,
+          };
+        });
+      });
+
+      socket.on("group-name-updated", (data) => {
+        set((state) => {
+          const updatedChats = state.chats.map((chat) => {
+            if (chat.id === data?.roomId) {
+              return {
+                ...chat,
+                name: data?.newName,
+              };
+            }
+            return chat;
+          });
+
+          const updatedActiveChatUser =
+            state.activeChatUser?.id === data?.roomId
+              ? { ...state.activeChatUser, name: data?.newName }
+              : state.activeChatUser;
+
+          return {
+            chats: updatedChats,
+            activeChatUser: updatedActiveChatUser,
+          };
+        });
       });
     },
 
@@ -307,6 +422,8 @@ const useChatStore = create((set, get) => {
       socket.off("message received");
       socket.off("message-deleted");
       socket.off("message-updated");
+      socket.off("chat-deleted");
+      socket.off("group-name-updated");
       socket.off("user-typing");
       socket.off("user-stop-typing");
       socket.off("getUsers");

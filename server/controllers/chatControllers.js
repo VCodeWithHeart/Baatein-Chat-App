@@ -22,11 +22,7 @@ const getChats = async (req, res, next) => {
       })
       .populate({
         path: "lastMessage", // Assuming this field is in your Room model
-        select: "content sender createdAt isAnonymous anonymousProfile",
-        populate: {
-          path: "anonymousProfile",
-          select: "aliasName avatarSeed",
-        },
+        select: "content sender createdAt",
       })
       .sort({ updatedAt: -1 });
 
@@ -65,6 +61,121 @@ const getChats = async (req, res, next) => {
   }
 };
 
+const deleteChat = async (req, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const currentUserId = req.user._id;
+
+    // Find the room
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    // Check if user is a member of the room
+    if (!room.members.includes(currentUserId)) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this chat" });
+    }
+
+    // For direct messages, delete the room completely
+    // For group chats, remove the user from members (soft delete)
+    if (room.type === "direct") {
+      // Delete all messages associated with this room
+      await Message.deleteMany({ roomId });
+      // Delete the room
+      await Room.findByIdAndDelete(roomId);
+
+      res.status(200).json({
+        success: true,
+        message: "Chat deleted successfully",
+        roomId,
+      });
+    } else {
+      // For group chats, remove user from members
+      room.members = room.members.filter(
+        (memberId) => !memberId.equals(currentUserId),
+      );
+
+      // If user is an admin, remove them from admins too
+      room.admins = room.admins.filter(
+        (adminId) => !adminId.equals(currentUserId),
+      );
+
+      // If no members left, delete the room
+      if (room.members.length === 0) {
+        await Message.deleteMany({ roomId });
+        await Room.findByIdAndDelete(roomId);
+      } else {
+        await room.save();
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "You have left the chat",
+        roomId,
+      });
+    }
+  } catch (error) {
+    console.error("Error deleting chat:", error);
+    next(error);
+  }
+};
+
+const editGroupName = async (req, res, next) => {
+  try {
+    const { roomId } = req.params;
+    const { newName } = req.body;
+    const currentUserId = req.user._id;
+
+    // Validate input
+    if (!newName || newName.trim().length === 0) {
+      return res.status(400).json({ message: "Group name cannot be empty" });
+    }
+
+    // Find the room
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    // Check if user is a member of the room
+    if (!room.members.includes(currentUserId)) {
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this chat" });
+    }
+
+    // Check if it's a group chat
+    if (room.type === "direct") {
+      return res
+        .status(400)
+        .json({ message: "Cannot edit name for direct messages" });
+    }
+
+    // Update the group name
+    room.name = newName.trim();
+    await room.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Group name updated successfully",
+      room: {
+        id: room._id,
+        name: room.name,
+      },
+    });
+  } catch (error) {
+    console.error("Error editing group name:", error);
+    next(error);
+  }
+};
+
 module.exports = {
   getChats,
+  deleteChat,
+  editGroupName,
 };

@@ -35,3 +35,13 @@ export const deleteMessage = async (messageId) => {
   const response = await axiosInstance.delete(`/messages/${messageId}`);
   return response;
 };
+
+export const deleteChat = async (roomId) => {
+  const response = await axiosInstance.delete(`/chats/${roomId}`);
+  return response;
+};
+
+export const editGroupName = async (roomId, newName) => {
+  const response = await axiosInstance.put(`/chats/${roomId}`, { newName });
+  return response;
+};
