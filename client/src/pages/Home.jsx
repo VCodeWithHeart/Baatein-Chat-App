@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import ConversationSidebar from "@/components/ConversationSidebar";
 import ChatArea from "@/components/ChatArea";
 import GroupCreationModal from "@/components/GroupCreationModal";
+import GlobalModals from "@/components/GlobalModals";
 import { useAuth } from "@/context/AuthContext";
 
 const Home = () => {
@@ -41,6 +42,7 @@ const Home = () => {
           <ChatArea />
         </div>
         <GroupCreationModal />
+        <GlobalModals />
       </div>
     </TooltipProvider>
   );
