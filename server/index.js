@@ -16,14 +16,13 @@ connectDB();
 const app = express();
 const server = createServer(app);
 
-
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 const io = new Server(server, {
@@ -93,6 +92,16 @@ io.on("connection", (socket) => {
     io.to(data.roomId).emit("message-deleted", data);
   });
 
+  // for delete chat
+  socket.on("delete-chat", (data) => {
+    io.to(data.roomId).emit("chat-deleted", data);
+  });
+
+  // for edit group name
+  socket.on("edit-group-name", (data) => {
+    io.to(data.roomId).emit("group-name-updated", data);
+  });
+
   // for new received message
   socket.on("newMessage", (data) => {
     io.to(data.roomId).emit("message received", data);
@@ -121,5 +130,5 @@ app.get("/", (req, res) => {
 });
 
 server.listen(process.env.PORT, () =>
-  console.log(`Server is running on port ${process.env.PORT}`)
+  console.log(`Server is running on port ${process.env.PORT}`),
 );

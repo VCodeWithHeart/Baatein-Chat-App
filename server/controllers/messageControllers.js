@@ -35,13 +35,6 @@ const sendMessage = async (req, res) => {
       content: content.trim(),
     });
 
-    // 3. Handle anonymous messages if needed (optional)
-    // if (room.isAnonymousWorld) {
-    //   const anonymousIdentity = await getAnonymousIdentity(userId, roomId);
-    //   message.isAnonymous = true;
-    //   message.anonymousProfile = anonymousIdentity._id;
-    // }
-
     await message.save();
 
     // 4. Update room's last message and timestamp
@@ -94,26 +87,13 @@ const getMessages = async (req, res) => {
       .populate({
         path: "sender",
         select: "username avatarUrl",
-      })
-      .populate({
-        path: "anonymousProfile",
-        select: "aliasName avatarSeed",
       });
 
     // 3. Format messages for frontend
     const formattedMessages = messages.map((msg) => ({
       _id: msg._id,
       content: msg.content,
-      isAnonymous: msg.isAnonymous,
-      sender: msg.isAnonymous
-        ? {
-            _id: null,
-            username: msg.anonymousProfile?.aliasName || "Anonymous",
-            avatarUrl: `/api/anonymous-avatar?seed=${
-              msg.anonymousProfile?.avatarSeed || "default"
-            }`,
-          }
-        : msg.sender,
+      sender: msg.sender,
       currentUserId,
       createdAt: msg.createdAt,
       updatedAt: msg.updatedAt,

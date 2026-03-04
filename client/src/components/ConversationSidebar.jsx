@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, MoreVertical, Trash2, X, Edit2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import useUIStore from "@/stores/useUIStore";
 import useChatStore from "@/stores/useChatStore";
@@ -9,7 +9,13 @@ import { getOnlineStatus } from "@/utils/userUtils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const ConversationSidebar = () => {
-  const { setShowGroupModal, sidebarOpen, setSidebarOpen } = useUIStore();
+  const {
+    setShowGroupModal,
+    sidebarOpen,
+    setSidebarOpen,
+    openDeleteModal,
+    openEditModal,
+  } = useUIStore();
   const {
     chats,
     onlineUsers,
@@ -18,7 +24,27 @@ const ConversationSidebar = () => {
     activeChatUser,
     setActiveChatUser,
     getMessagesForUser,
+    deleteChatHandler,
+    editGroupNameHandler,
   } = useChatStore();
+
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId !== null) {
+        const menuButton = event.target.closest("[data-menu-button]");
+        const menuContent = event.target.closest("[data-menu-content]");
+        if (!menuButton && !menuContent) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openMenuId]);
 
   const handleInitializeChat = (chatObj) => {
     setSidebarOpen(false);
@@ -26,6 +52,18 @@ const ConversationSidebar = () => {
     if (chatObj?.id === activeChatUser?.id) return;
     setActiveChatUser(chatObj);
     getMessagesForUser(chatObj);
+  };
+
+  const handleOpenDelete = (e, chatObj) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    openDeleteModal(chatObj);
+  };
+
+  const handleOpenEdit = (e, chatObj) => {
+    e.stopPropagation();
+    setOpenMenuId(null);
+    openEditModal(chatObj);
   };
 
   return (
@@ -81,7 +119,7 @@ const ConversationSidebar = () => {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div>
             {chats?.map((chatObj, i) => {
               const onlineStatus = getOnlineStatus(chatObj, onlineUsers);
 
@@ -89,10 +127,11 @@ const ConversationSidebar = () => {
                 <div
                   key={i}
                   className={cn(
-                    "cursor-pointer transition-colors duration-200",
-                    activeChatUser?.id === chatObj?.id
-                      ? "bg-gray-50 border-l-4 border-primary"
-                      : "hover:bg-gray-50"
+                    "cursor-pointer transition-colors duration-200 group relative",
+                    String(activeChatUser?.id || activeChatUser?._id) ===
+                      String(chatObj?.id || chatObj?._id)
+                      ? "bg-gray-50 border-l-4 border-black"
+                      : "hover:bg-gray-50",
                   )}
                   onClick={() => handleInitializeChat(chatObj)}
                 >
@@ -115,8 +154,8 @@ const ConversationSidebar = () => {
                              onlineStatus === "green"
                                ? "bg-green-500"
                                : onlineStatus === "blue"
-                               ? "bg-blue-500"
-                               : "bg-gray-500"
+                                 ? "bg-blue-500"
+                                 : "bg-gray-500"
                            }`}
                           ></span>
                         </TooltipTrigger>
@@ -131,15 +170,15 @@ const ConversationSidebar = () => {
                               onlineStatus === "green"
                                 ? "bg-green-100"
                                 : onlineStatus === "blue"
-                                ? "bg-blue-100"
-                                : "bg-gray-100"
+                                  ? "bg-blue-100"
+                                  : "bg-gray-100"
                             } px-2 py-1 rounded-full`}
                           >
                             {onlineStatus === "green"
                               ? "Online"
                               : onlineStatus === "blue"
-                              ? "Someone is online"
-                              : "Offline"}
+                                ? "Someone is online"
+                                : "Offline"}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -158,6 +197,51 @@ const ConversationSidebar = () => {
                       <p className="text-sm text-gray-500 truncate">
                         {chatObj?.lastMessage?.content || "No messages yet"}
                       </p>
+                    </div>
+
+                    {/* Three Dots Menu */}
+                    <div className="relative">
+                      <button
+                        data-menu-button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(
+                            openMenuId === chatObj.id ? null : chatObj.id,
+                          );
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-200 rounded-lg"
+                      >
+                        <MoreVertical size={18} className="text-gray-600" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {openMenuId === chatObj.id && (
+                        <div
+                          data-menu-content
+                          className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                        >
+                          {/* Edit Group Name - Only for groups */}
+                          {chatObj.isGroup && (
+                            <button
+                              onClick={(e) => handleOpenEdit(e, chatObj)}
+                              className="w-full px-4 py-2 text-left text-blue-600 hover:bg-blue-50 flex items-center gap-2 rounded-t-lg transition-colors"
+                            >
+                              <Edit2 size={16} />
+                              Edit Group Name
+                            </button>
+                          )}
+
+                          <button
+                            onClick={(e) => handleOpenDelete(e, chatObj)}
+                            className={`w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors ${
+                              chatObj.isGroup ? "rounded-b-lg" : "rounded-lg"
+                            }`}
+                          >
+                            <Trash2 size={16} />
+                            Delete Chat
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

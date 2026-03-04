@@ -4,14 +4,12 @@ import EmojiPicker from "emoji-picker-react";
 import { Smile, Paperclip, SendHorizontal } from "lucide-react";
 import useChatStore from "@/stores/useChatStore";
 import { useAuth } from "@/context/AuthContext";
-import useUIStore from "@/stores/useUIStore";
 import { Button } from "../ui/button";
 
 const MessageInput = ({ messagesEndRef }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiRef = useRef(null);
   const { userData } = useAuth();
-  const isAnonymous = useUIStore((state) => state.isAnonymous);
 
   const { messages, isTyping, message, setMessage, sendMessageHandler } =
     useChatStore();
@@ -80,9 +78,7 @@ const MessageInput = ({ messagesEndRef }) => {
 
         <div className="flex-1 min-w-0">
           <Textarea
-            placeholder={
-              isAnonymous ? "Send anonymous message..." : "Type your message..."
-            }
+            placeholder="Type your message..."
             className="min-h-[44px] bg-background/80 max-h-[200px]"
             value={message}
             onChange={handleWriteMessage}

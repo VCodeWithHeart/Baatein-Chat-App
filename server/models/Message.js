@@ -23,18 +23,8 @@ const messageSchema = new mongoose.Schema(
     },
     // for future: files, images, etc.
     // attachments: [ ... ],
-
-    // Anonymous handling
-    isAnonymous: {
-      type: Boolean,
-      default: false,
-    },
-    anonymousProfile: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "AnonymousIdentity",
-    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Message", messageSchema);

@@ -1,8 +1,15 @@
 import { useAuth } from "@/context/AuthContext";
 import useChatStore from "@/stores/useChatStore";
 import { formatDateLabel, isSameDay } from "@/utils/dateUtils";
-import { Check, MessageCircle, MoreVertical, Pencil, Trash2, X } from "lucide-react";
-import React, { useState } from "react";
+import {
+  Check,
+  MessageCircle,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -12,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "../ui/input";
 
-const MessagesList = ({ messagesEndRef }) => {
+const MessagesList = ({ messagesEndRef, searchState, setSearchState }) => {
   const { userData } = useAuth();
   const {
     messages,
@@ -26,6 +33,8 @@ const MessagesList = ({ messagesEndRef }) => {
   // NEW: Local state for editing
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState("");
+  const messageRefs = useRef({});
+  const [matchedMessages, setMatchedMessages] = useState([]);
 
   // Function to start editing
   const handleEditClick = (msg) => {
@@ -38,6 +47,55 @@ const MessagesList = ({ messagesEndRef }) => {
     setEditingMessageId(null);
     setEditText("");
   };
+
+  // Function to search messages
+  useEffect(() => {
+    if (searchState.searchTerm.trim()) {
+      const matches = messages
+        .map((msg, idx) => ({
+          messageId: msg._id,
+          messageIndex: idx,
+          content: msg.content,
+        }))
+        .filter((msg) =>
+          msg.content
+            .toLowerCase()
+            .includes(searchState.searchTerm.toLowerCase()),
+        );
+
+      setMatchedMessages(matches);
+      setSearchState({
+        ...searchState,
+        totalMatches: matches.length,
+      });
+    } else {
+      setMatchedMessages([]);
+      setSearchState({
+        ...searchState,
+        totalMatches: 0,
+      });
+    }
+  }, [searchState.searchTerm, messages]);
+
+  // Scroll to matched message
+  useEffect(() => {
+    const handleScrollToMatch = (event) => {
+      const index = event.detail;
+      if (matchedMessages[index]) {
+        const messageId = matchedMessages[index].messageId;
+        setTimeout(() => {
+          messageRefs.current[messageId]?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }, 100);
+      }
+    };
+
+    window.addEventListener("scrollToMatch", handleScrollToMatch);
+    return () =>
+      window.removeEventListener("scrollToMatch", handleScrollToMatch);
+  }, [matchedMessages]);
 
   // Function to submit edit
   const handleUpdate = async (messageId) => {
@@ -59,6 +117,36 @@ const MessagesList = ({ messagesEndRef }) => {
     }
   };
 
+  // Function to render highlighted text
+  const renderHighlightedText = (text, searchTerm, messageId) => {
+    if (!searchTerm.trim()) return text;
+
+    const regex = new RegExp(
+      `(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
+    const parts = text.split(regex);
+    const isCurrentMatch =
+      searchState.searchTerm &&
+      matchedMessages[searchState.currentMatchIndex]?.messageId === messageId;
+
+    return parts.map((part, idx) => {
+      if (regex.test(part)) {
+        return (
+          <span
+            key={idx}
+            className={`${
+              isCurrentMatch ? "bg-yellow-300 font-bold" : "bg-yellow-100"
+            }`}
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-4 bg-amber-50/60 custom-scrollbar">
       {loadingMessages ? (
@@ -78,7 +166,7 @@ const MessagesList = ({ messagesEndRef }) => {
             index === 0 ||
             !isSameDay(
               new Date(messages[index - 1].createdAt),
-              new Date(msg.createdAt)
+              new Date(msg.createdAt),
             );
 
           const isCurrentUser = msg?.sender?._id === userData?.userId;
@@ -185,13 +273,24 @@ const MessagesList = ({ messagesEndRef }) => {
                     ) : (
                       <div className="flex flex-wrap items-end gap-2">
                         <p
+                          ref={(el) => {
+                            if (el) messageRefs.current[msg._id] = el;
+                          }}
                           className={`text-sm leading-relaxed whitespace-pre-wrap ${
                             isCurrentUser ? "text-white" : "text-gray-800"
                           }`}
                         >
-                          {typeof msg?.content === "object"
-                            ? msg.content
-                            : msg?.content}
+                          {searchState.searchTerm
+                            ? renderHighlightedText(
+                                typeof msg?.content === "object"
+                                  ? JSON.stringify(msg.content)
+                                  : msg?.content,
+                                searchState.searchTerm,
+                                msg._id,
+                              )
+                            : typeof msg?.content === "object"
+                              ? JSON.stringify(msg.content)
+                              : msg?.content}
                           {msg.isEdited && (
                             <span className="text-[10px] ml-1 opacity-60 italic">
                               (edited)

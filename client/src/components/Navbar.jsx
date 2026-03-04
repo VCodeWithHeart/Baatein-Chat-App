@@ -17,8 +17,7 @@ import UserSearchBar from "./navbar/UserSearchBar";
 
 export const Navbar = () => {
   const { tokenSetter, userData } = useAuth();
-  const { sidebarOpen, setSidebarOpen, isAnonymous, setIsAnonymous } =
-    useUIStore();
+  const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { startChatHandler } = useChatStore();
 
   const handleStartChat = async (user) => {
@@ -31,10 +30,6 @@ export const Navbar = () => {
 
   const handleLogout = () => {
     tokenSetter(null);
-  };
-
-  const toggleAnonymousMode = () => {
-    setIsAnonymous(!isAnonymous);
   };
 
   return (
@@ -68,22 +63,6 @@ export const Navbar = () => {
 
           {/* Right Side Controls */}
           <div className="flex items-center space-x-3">
-            {/* Anonymous Mode Button */}
-            <Button
-              onClick={toggleAnonymousMode}
-              variant={isAnonymous ? "default" : "outline"}
-              className={`${
-                isAnonymous
-                  ? "bg-purple-500 hover:bg-purple-600 text-white"
-                  : "border-purple-400 text-purple-500 hover:text-purple-600"
-              } transition-all duration-200`}
-            >
-              <span className="text-sm font-medium">Anonymous Mode</span>
-              {isAnonymous && (
-                <span className="ml-1 h-2 w-2 rounded-full bg-white" />
-              )}
-            </Button>
-
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
