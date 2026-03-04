@@ -198,7 +198,7 @@ const MessagesList = ({ messagesEndRef, searchState, setSearchState }) => {
                       isSequence ? "invisible" : ""
                     }`}
                   >
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-100 to-purple-200 border border-white shadow-sm flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-linear-to-br from-violet-100 to-purple-200 border border-white shadow-sm flex items-center justify-center">
                       <span className="text-violet-700 font-bold text-xs uppercase">
                         {msg?.sender?.username?.charAt(0)}
                       </span>
@@ -230,7 +230,7 @@ const MessagesList = ({ messagesEndRef, searchState, setSearchState }) => {
                       <div className="flex flex-col space-y-2 min-w-[220px]">
                         <Input
                           multiline="true"
-                          className={`min-h-[2.5rem] text-sm border-none focus-visible:ring-1 focus-visible:ring-offset-0 ${
+                          className={`min-h-10 text-sm border-none focus-visible:ring-1 focus-visible:ring-offset-0 ${
                             isCurrentUser
                               ? "bg-white/10 text-white placeholder:text-white/50 focus-visible:ring-white/30"
                               : "bg-gray-50 text-black focus-visible:ring-violet-400"

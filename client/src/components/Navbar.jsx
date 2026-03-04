@@ -95,9 +95,9 @@ export const Navbar = () => {
                 <DropdownMenuLabel className="font-normal p-3">
                   <div className="flex items-center gap-3">
                     {/* User Avatar with Gradient */}
-                    <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-violet-500 to-purple-600 p-[2px] shadow-md">
+                    <div className="h-11 w-11 rounded-full bg-linear-to-tr from-violet-500 to-purple-600 p-0.5 shadow-md">
                       <div className="h-full w-full rounded-full bg-white flex items-center justify-center">
-                        <div className="h-full w-full rounded-full bg-gradient-to-tr from-violet-100 to-purple-50 flex items-center justify-center">
+                        <div className="h-full w-full rounded-full bg-linear-to-tr from-violet-100 to-purple-50 flex items-center justify-center">
                           <span className="font-bold text-lg text-violet-600">
                             {userData?.username?.charAt(0).toUpperCase()}
                           </span>
@@ -110,7 +110,7 @@ export const Navbar = () => {
                       <p className="text-sm font-bold text-gray-900 truncate">
                         {userData?.username}
                       </p>
-                      <p className="text-xs text-gray-500 truncate font-medium max-w-[160px]">
+                      <p className="text-xs text-gray-500 truncate font-medium max-w-40">
                         {userData?.email || "user@example.com"}
                       </p>
                     </div>
