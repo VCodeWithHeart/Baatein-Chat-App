@@ -19,9 +19,16 @@ import {
 } from "lucide-react";
 import { getOnlineStatus } from "@/utils/userUtils";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const ChatHeader = ({ searchState, setSearchState }) => {
-  const { activeChatUser, onlineUsers, editGroupNameHandler } = useChatStore();
+  const {
+    activeChatUser,
+    onlineUsers,
+    editGroupNameHandler,
+    startChatHandler,
+  } = useChatStore();
+  const { userData } = useAuth();
   const onlineStatus = getOnlineStatus(activeChatUser, onlineUsers);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -44,6 +51,17 @@ const ChatHeader = ({ searchState, setSearchState }) => {
   const handleCloseEditModal = () => {
     setNewGroupName(activeChatUser?.name || "");
     setShowEditModal(false);
+  };
+
+  // start a direct chat with a member and close modal
+  const handleMemberChatClick = async (e, member) => {
+    e.stopPropagation();
+    try {
+      await startChatHandler(userData, member);
+      setShowMembersModal(false);
+    } catch (err) {
+      console.error("Failed to open chat with member:", err);
+    }
   };
 
   return (
@@ -317,6 +335,15 @@ const ChatHeader = ({ searchState, setSearchState }) => {
                       </p>
                       <p className="text-xs text-gray-500">Member</p>
                     </div>
+                    {member?._id !== userData?._id && (
+                      <button
+                        onClick={(e) => handleMemberChatClick(e, member)}
+                        className="p-2 rounded-full hover:bg-gray-100 hover:text-blue-600 transition-colors cursor-pointer"
+                        title="Chat"
+                      >
+                        <MessageCircle className="h-5 w-5 text-gray-600 hover:text-blue-600" />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
